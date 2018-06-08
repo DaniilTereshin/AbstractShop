@@ -1,4 +1,6 @@
-﻿using System;
+﻿using AbstractShopService.BindingModels;
+using AbstractShopService.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,10 +13,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using AbstractShopService.Interfaces;
-using AbstractShopService.ViewModels;
-using Unity;
-using Unity.Attributes;
 namespace WpfMotorZavod
 {
     /// <summary>
@@ -22,16 +20,11 @@ namespace WpfMotorZavod
     /// </summary>
     public partial class FormCommoditys : Window
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
 
-        private readonly ICommodityService service;
-
-        public FormCommoditys(ICommodityService service)
+        public FormCommoditys()
         {
             InitializeComponent();
             Loaded += FormCommoditys_Load;
-            this.service = service;
         }
 
         private void FormCommoditys_Load(object sender, EventArgs e)
@@ -43,13 +36,21 @@ namespace WpfMotorZavod
         {
             try
             {
-                List<CommodityViewModel> list = service.GetList();
-                if (list != null)
+                var response = APIClient.GetRequest("api/Commodity/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
-                    dataGridViewCommoditys.ItemsSource = list;
-                    dataGridViewCommoditys.Columns[0].Visibility = Visibility.Hidden;
-                    dataGridViewCommoditys.Columns[1].Width = DataGridLength.Auto;
-                    dataGridViewCommoditys.Columns[3].Visibility = Visibility.Hidden;
+                    List<CommodityViewModel> list = APIClient.GetElement<List<CommodityViewModel>>(response);
+                    if (list != null)
+                    {
+                        dataGridViewCommoditys.ItemsSource = list;
+                        dataGridViewCommoditys.Columns[0].Visibility = Visibility.Hidden;
+                        dataGridViewCommoditys.Columns[1].Width = DataGridLength.Auto;
+                        dataGridViewCommoditys.Columns[3].Visibility = Visibility.Hidden;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
@@ -60,7 +61,7 @@ namespace WpfMotorZavod
 
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FormCommodity>();
+            var form = new FormCommodity();
             if (form.ShowDialog() == true)
                 LoadData();
         }
@@ -69,7 +70,7 @@ namespace WpfMotorZavod
         {
             if (dataGridViewCommoditys.SelectedItem != null)
             {
-                var form = Container.Resolve<FormCommodity>();
+                var form = new FormCommodity();
                 form.Id = ((CommodityViewModel)dataGridViewCommoditys.SelectedItem).Id;
                 if (form.ShowDialog() == true)
                     LoadData();
@@ -87,7 +88,11 @@ namespace WpfMotorZavod
                     int id = ((CommodityViewModel)dataGridViewCommoditys.SelectedItem).Id;
                     try
                     {
-                        service.DelElement(id);
+                        var response = APIClient.PostRequest("api/Commodity/DelElement", new ZakazchikBindingModel { Id = id });
+                        if (!response.Result.IsSuccessStatusCode)
+                        {
+                            throw new Exception(APIClient.GetError(response));
+                        }
                     }
                     catch (Exception ex)
                     {

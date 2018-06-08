@@ -8,7 +8,7 @@
          Title="Создание заказа" Height="217" Width="353" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
     <Grid>
         <Label x:Name="labelClient" Content="Клиент:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="labelProduct" Content="Двигатель:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="labelProduct" Content="Самолет:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
         <Label x:Name="labelCount" Content="Количество:" HorizontalAlignment="Left" Margin="10,72,0,0" VerticalAlignment="Top"/>
         <Label x:Name="labelSum" Content="Сумма:" HorizontalAlignment="Left" Margin="10,103,0,0" VerticalAlignment="Top"/>
         <ComboBox x:Name="comboBoxClient" HorizontalAlignment="Left" Margin="93,14,0,0" VerticalAlignment="Top" Width="223" Text="{Binding Path=Id}"/>
