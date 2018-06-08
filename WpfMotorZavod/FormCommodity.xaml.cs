@@ -1,9 +1,5 @@
-﻿using AbstractShopService.BindingModels;
-using AbstractShopService.Interfaces;
-using AbstractShopService.ViewModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,9 +11,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using AbstractShopService.BindingModels;
+using AbstractShopService.Interfaces;
+using AbstractShopService.ViewModels;
 using Unity;
 using Unity.Attributes;
-
 namespace WpfMotorZavod
 {
     /// <summary>
@@ -28,13 +26,13 @@ namespace WpfMotorZavod
         [Dependency]
         public new IUnityContainer Container { get; set; }
 
-        public int ID { set { id = value; } }
+        public int Id { set { id = value; } }
 
         private readonly ICommodityService service;
 
         private int? id;
 
-        private List<CommodityDetaliViewModel> productDetalis;
+        private List<CommodityDetaliViewModel> CommodityDetalis;
 
         public FormCommodity(ICommodityService service)
         {
@@ -54,7 +52,7 @@ namespace WpfMotorZavod
                     {
                         textBoxName.Text = view.CommodityName;
                         textBoxPrice.Text = view.Price.ToString();
-                        productDetalis = view.CommodityDetalis;
+                        CommodityDetalis = view.CommodityDetalis;
                         LoadData();
                     }
                 }
@@ -64,21 +62,21 @@ namespace WpfMotorZavod
                 }
             }
             else
-                productDetalis = new List<CommodityDetaliViewModel>();
+                CommodityDetalis = new List<CommodityDetaliViewModel>();
         }
 
         private void LoadData()
         {
             try
             {
-                if (productDetalis != null)
+                if (CommodityDetalis != null)
                 {
-                    dataGridViewProduct.ItemsSource = null;
-                    dataGridViewProduct.ItemsSource = productDetalis;
-                    dataGridViewProduct.Columns[0].Visibility = Visibility.Hidden;
-                    dataGridViewProduct.Columns[1].Visibility = Visibility.Hidden;
-                    dataGridViewProduct.Columns[2].Visibility = Visibility.Hidden;
-                    dataGridViewProduct.Columns[3].Width = DataGridLength.Auto;
+                    dataGridViewCommodity.ItemsSource = null;
+                    dataGridViewCommodity.ItemsSource = CommodityDetalis;
+                    dataGridViewCommodity.Columns[0].Visibility = Visibility.Hidden;
+                    dataGridViewCommodity.Columns[1].Visibility = Visibility.Hidden;
+                    dataGridViewCommodity.Columns[2].Visibility = Visibility.Hidden;
+                    dataGridViewCommodity.Columns[3].Width = DataGridLength.Auto;
                 }
             }
             catch (Exception ex)
@@ -96,7 +94,7 @@ namespace WpfMotorZavod
                 {
                     if (id.HasValue)
                         form.Model.CommodityId = id.Value;
-                    productDetalis.Add(form.Model);
+                    CommodityDetalis.Add(form.Model);
                 }
                 LoadData();
             }
@@ -104,13 +102,13 @@ namespace WpfMotorZavod
 
         private void buttonUpd_Click(object sender, EventArgs e)
         {
-            if (dataGridViewProduct.SelectedItem != null)
+            if (dataGridViewCommodity.SelectedItem != null)
             {
                 var form = Container.Resolve<FormCommodityDetali>();
-                form.Model = productDetalis[dataGridViewProduct.SelectedIndex];
+                form.Model = CommodityDetalis[dataGridViewCommodity.SelectedIndex];
                 if (form.ShowDialog() == true)
                 {
-                    productDetalis[dataGridViewProduct.SelectedIndex] = form.Model;
+                    CommodityDetalis[dataGridViewCommodity.SelectedIndex] = form.Model;
                     LoadData();
                 }
             }
@@ -118,14 +116,14 @@ namespace WpfMotorZavod
 
         private void buttonDel_Click(object sender, EventArgs e)
         {
-            if (dataGridViewProduct.SelectedItem != null)
+            if (dataGridViewCommodity.SelectedItem != null)
             {
                 if (MessageBox.Show("Удалить запись?", "Внимание",
                     MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
                     try
                     {
-                        productDetalis.RemoveAt(dataGridViewProduct.SelectedIndex);
+                        CommodityDetalis.RemoveAt(dataGridViewCommodity.SelectedIndex);
                     }
                     catch (Exception ex)
                     {
@@ -153,22 +151,22 @@ namespace WpfMotorZavod
                 MessageBox.Show("Заполните цену", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            if (productDetalis == null || productDetalis.Count == 0)
+            if (CommodityDetalis == null || CommodityDetalis.Count == 0)
             {
-                MessageBox.Show("Заполните компоненты", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show("Заполните заготовки", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
             try
             {
-                List<CommodityDetaliBindingModel> productDetaliBM = new List<CommodityDetaliBindingModel>();
-                for (int i = 0; i < productDetalis.Count; ++i)
+                List<CommodityDetaliBindingModel> productComponentBM = new List<CommodityDetaliBindingModel>();
+                for (int i = 0; i < CommodityDetalis.Count; ++i)
                 {
-                    productDetaliBM.Add(new CommodityDetaliBindingModel
+                    productComponentBM.Add(new CommodityDetaliBindingModel
                     {
-                        Id = productDetalis[i].Id,
-                        CommodityId = productDetalis[i].CommodityId,
-                        DetaliId = productDetalis[i].DetaliId,
-                        Count = productDetalis[i].Count
+                        Id = CommodityDetalis[i].Id,
+                        CommodityId = CommodityDetalis[i].CommodityId,
+                        DetaliId = CommodityDetalis[i].DetaliId,
+                        Count = CommodityDetalis[i].Count
                     });
                 }
                 if (id.HasValue)
@@ -178,7 +176,7 @@ namespace WpfMotorZavod
                         Id = id.Value,
                         CommodityName = textBoxName.Text,
                         Price = Convert.ToInt32(textBoxPrice.Text),
-                        CommodityDetalis = productDetaliBM
+                        CommodityDetalis = productComponentBM
                     });
                 }
                 else
@@ -187,7 +185,7 @@ namespace WpfMotorZavod
                     {
                         CommodityName = textBoxName.Text,
                         Price = Convert.ToInt32(textBoxPrice.Text),
-                        CommodityDetalis = productDetaliBM
+                        CommodityDetalis = productComponentBM
                     });
                 }
                 MessageBox.Show("Сохранение прошло успешно", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
