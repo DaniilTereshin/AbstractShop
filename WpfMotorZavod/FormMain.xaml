@@ -12,7 +12,7 @@
                 <MenuItem Header="Клиенты" HorizontalAlignment="Left" Height="28" Width="135" Margin="0,0,-21,0" Click="получателиToolStripMenuItem_Click"/>
                 <MenuItem Header="Детали" HorizontalAlignment="Left" Height="24" Width="158" Margin="0,0,-18,0" Click="заготовкиToolStripMenuItem_Click"/>
                 <MenuItem Header="Самолеты" HorizontalAlignment="Left" Height="28" Width="135" Margin="0,0,-21,0" Click="мебельToolStripMenuItem_Click"/>
-                <MenuItem Header="Склад" HorizontalAlignment="Left" Height="28" Width="135" Margin="0,0,-21,0" Click="базыToolStripMenuItem_Click"/>
+                <MenuItem Header="Склады" HorizontalAlignment="Left" Height="28" Width="135" Margin="0,0,-21,0" Click="базыToolStripMenuItem_Click"/>
                 <MenuItem Header="Рабочие" HorizontalAlignment="Left" Height="28" Width="161" Margin="0,0,-21,0" Click="рабочиеToolStripMenuItem_Click"/>
 
             </MenuItem>
