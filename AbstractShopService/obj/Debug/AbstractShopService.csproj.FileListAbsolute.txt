@@ -1,0 +1,16 @@
+E:\программирование\AbstractShop-LabWork09\AbstractShopService\bin\Debug\AbstractShopService.dll
+E:\программирование\AbstractShop-LabWork09\AbstractShopService\bin\Debug\AbstractShopService.pdb
+E:\программирование\AbstractShop-LabWork09\AbstractShopService\bin\Debug\AbstractShopModel.dll
+E:\программирование\AbstractShop-LabWork09\AbstractShopService\bin\Debug\AbstractShopModel.pdb
+E:\программирование\AbstractShop-LabWork09\AbstractShopService\obj\Debug\AbstractShopService.csprojResolveAssemblyReference.cache
+E:\программирование\AbstractShop-LabWork09\AbstractShopService\obj\Debug\AbstractShopService.csproj.CoreCompileInputs.cache
+E:\программирование\AbstractShop-LabWork09\AbstractShopService\obj\Debug\AbstractShopService.dll
+E:\программирование\AbstractShop-LabWork09\AbstractShopService\obj\Debug\AbstractShopService.pdb
+F:\программирование\AbstractShop-LabWork09\AbstractShopService\bin\Debug\AbstractShopService.dll
+F:\программирование\AbstractShop-LabWork09\AbstractShopService\bin\Debug\AbstractShopService.pdb
+F:\программирование\AbstractShop-LabWork09\AbstractShopService\bin\Debug\AbstractShopModel.dll
+F:\программирование\AbstractShop-LabWork09\AbstractShopService\bin\Debug\AbstractShopModel.pdb
+F:\программирование\AbstractShop-LabWork09\AbstractShopService\obj\Debug\AbstractShopService.csprojResolveAssemblyReference.cache
+F:\программирование\AbstractShop-LabWork09\AbstractShopService\obj\Debug\AbstractShopService.csproj.CoreCompileInputs.cache
+F:\программирование\AbstractShop-LabWork09\AbstractShopService\obj\Debug\AbstractShopService.dll
+F:\программирование\AbstractShop-LabWork09\AbstractShopService\obj\Debug\AbstractShopService.pdb
