@@ -1,6 +1,9 @@
-﻿using AbstractShopService.ImplementationsList;
+﻿using AbstractShopService;
+using AbstractShopService.ImplementationsBD;
+using AbstractShopService.ImplementationsList;
 using AbstractShopService.Interfaces;
 using System;
+using System.Data.Entity;
 using System.Windows.Forms;
 using Unity;
 using Unity.Lifetime;
@@ -25,13 +28,14 @@ namespace AbstractShopView
         public static IUnityContainer BuildUnityContainer()
         {
             var currentContainer = new UnityContainer();
-            currentContainer.RegisterType<IZakazchikService, ZakazchikServiceList>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IDetaliService, DetaliServiceList>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IRabochiService, RabochiServiceList>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<ICommodityService, CommodityServiceList>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IStoreService, StoreServiceList>(new HierarchicalLifetimeManager());
-            currentContainer.RegisterType<IMainService, MainServiceList>(new HierarchicalLifetimeManager());
-            
+            currentContainer.RegisterType<DbContext, AbstractDbContext>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IZakazchikService, ZakazchikServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IDetaliService, DetaliServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IRabochiService, RabochiServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<ICommodityService, CommodityServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IStoreService, StoreServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IMainService, MainServiceBD>(new HierarchicalLifetimeManager());
+
             return currentContainer;
         }
     }

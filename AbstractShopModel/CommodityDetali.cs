@@ -18,5 +18,8 @@ namespace AbstractShopModel
         public int DetaliId { get; set; }
 
         public int Count { get; set; }
+        public virtual Commodity Commodity { get; set; }
+
+        public virtual Detali Detali { get; set; }
     }
 }
