@@ -1,50 +1,40 @@
 ﻿using AbstractShopService.BindingModels;
-using AbstractShopService.Interfaces;
+using AbstractShopService.ViewModels;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractShopView
 {
     public partial class FormStoresLoad : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly IReportService service;
-
-        public FormStoresLoad(IReportService service)
+        public FormStoresLoad()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void FormStoresLoad_Load(object sender, EventArgs e)
         {
             try
             {
-                var dict = service.GetStoresLoad();
-                if (dict != null)
+                var response = APIClient.GetRequest("api/Report/GetStoresLoad");
+                if (response.Result.IsSuccessStatusCode)
                 {
                     dataGridView.Rows.Clear();
-                    foreach (var elem in dict)
+                    foreach (var elem in APIClient.GetElement<List<StoresLoadViewModel>>(response))
                     {
                         dataGridView.Rows.Add(new object[] { elem.StoreName, "", "" });
                         foreach (var listElem in elem.Detalis)
                         {
-                            dataGridView.Rows.Add(new object[] { "", listElem.Item1, listElem.Item2 });
+                            dataGridView.Rows.Add(new object[] { "", listElem.DetaliName, listElem.Count });
                         }
                         dataGridView.Rows.Add(new object[] { "Итого", "", elem.TotalCount });
                         dataGridView.Rows.Add(new object[] { });
                     }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
                 }
             }
             catch (Exception ex)
@@ -63,11 +53,18 @@ namespace AbstractShopView
             {
                 try
                 {
-                    service.SaveStoresLoad(new ReportBindingModel
+                    var response = APIClient.PostRequest("api/Report/SaveStoresLoad", new ReportBindingModel
                     {
                         FileName = sfd.FileName
                     });
-                    MessageBox.Show("Выполнено", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    if (response.Result.IsSuccessStatusCode)
+                    {
+                        MessageBox.Show("Выполнено", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
+                    }
                 }
                 catch (Exception ex)
                 {

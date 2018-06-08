@@ -91,7 +91,7 @@ namespace AbstractShopView
             this.dataGridView.Size = new System.Drawing.Size(350, 505);
             this.dataGridView.TabIndex = 0;
             // 
-            // FormProducts
+            // FormCommoditys
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -101,9 +101,9 @@ namespace AbstractShopView
             this.Controls.Add(this.buttonUpd);
             this.Controls.Add(this.buttonAdd);
             this.Controls.Add(this.dataGridView);
-            this.Name = "FormProducts";
+            this.Name = "FormCommoditys";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Двигатель";
+            this.Text = "Самолет";
             this.Load += new System.EventHandler(this.FormProducts_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);
