@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 
 namespace AbstractShopService
 {
-    [Table("AbstractDatabase")]
+    //[Table("AbstractDatabase3")]
     public class AbstractDbContext : DbContext
     {
-        public AbstractDbContext()
+        public AbstractDbContext(): base ("AbstractDatabase314")
         {
             //настройки конфигурации для entity
             Configuration.ProxyCreationEnabled = false;
@@ -35,6 +35,35 @@ namespace AbstractShopService
         public virtual DbSet<Store> Stores { get; set; }
 
         public virtual DbSet<StoreDetali> StoreDetalis { get; set; }
+        /// <summary>
+        /// Перегружаем метод созранения изменений. Если возникла ошибка - очищаем все изменения
+        /// </summary>
+        /// <returns></returns>
+        public override int SaveChanges()
+        {
+            try
+            {
+                return base.SaveChanges();
+            }
+            catch (Exception)
+            {
+                foreach (var entry in ChangeTracker.Entries())
+                {
+                    switch (entry.State)
+                    {
+                        case EntityState.Modified:
+                            entry.State = EntityState.Unchanged;
+                            break;
+                        case EntityState.Deleted:
+                            entry.Reload();
+                            break;
+                        case EntityState.Added:
+                            entry.State = EntityState.Detached;
+                            break;
+                    }
+                }
+                throw;
+            }
+        }
     }
 }
-
