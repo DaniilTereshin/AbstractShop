@@ -1,4 +1,6 @@
-﻿using System;
+﻿using AbstractShopService.BindingModels;
+using AbstractShopService.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,11 +13,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using AbstractShopService.BindingModels;
-using AbstractShopService.Interfaces;
-using AbstractShopService.ViewModels;
-using Unity;
-using Unity.Attributes;
 namespace WpfMotorZavod
 {
     /// <summary>
@@ -23,48 +20,51 @@ namespace WpfMotorZavod
     /// </summary>
     public partial class FormCreateZakaz : Window
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly IZakazchikService serviceP;
-
-        private readonly ICommodityService serviceM;
-
-        private readonly IMainService serviceG;
-
-
-        public FormCreateZakaz(IZakazchikService serviceP, ICommodityService serviceM, IMainService serviceG)
+        public FormCreateZakaz()
         {
             InitializeComponent();
             Loaded += FormCreateZakaz_Load;
             comboBoxCommodity.SelectionChanged += comboBoxCommodity_SelectedIndexChanged;
-
             comboBoxCommodity.SelectionChanged += new SelectionChangedEventHandler(comboBoxCommodity_SelectedIndexChanged);
-            this.serviceP = serviceP;
-            this.serviceM = serviceM;
-            this.serviceG = serviceG;
         }
 
         private void FormCreateZakaz_Load(object sender, EventArgs e)
         {
             try
             {
-                List<ZakazchikViewModel> listP = serviceP.GetList();
-                if (listP != null)
+                var responseC = APIClient.GetRequest("api/Zakazchik/GetList");
+                if (responseC.Result.IsSuccessStatusCode)
                 {
-                    comboBoxClient.DisplayMemberPath = "ZakazchikFIO";
-                    comboBoxClient.SelectedValuePath = "Id";
-                    comboBoxClient.ItemsSource = listP;
-                    comboBoxCommodity.SelectedItem = null;
+                    List<ZakazchikViewModel> list = APIClient.GetElement<List<ZakazchikViewModel>>(responseC);
+                    if (list != null)
+                    {
+                        comboBoxClient.DisplayMemberPath = "ZakazchikFIO";
+                        comboBoxClient.SelectedValuePath = "Id";
+                        comboBoxClient.ItemsSource = list;
+                        comboBoxCommodity.SelectedItem = null;
+                    }
                 }
-                List<CommodityViewModel> listM = serviceM.GetList();
-                if (listM != null)
+                else
                 {
-                    comboBoxCommodity.DisplayMemberPath = "CommodityName";
-                    comboBoxCommodity.SelectedValuePath = "Id";
-                    comboBoxCommodity.ItemsSource = listM;
-                    comboBoxCommodity.SelectedItem = null;
+                    throw new Exception(APIClient.GetError(responseC));
                 }
+                var responseP = APIClient.GetRequest("api/Commodity/GetList");
+                if (responseP.Result.IsSuccessStatusCode)
+                {
+                    List<CommodityViewModel> list = APIClient.GetElement<List<CommodityViewModel>>(responseP);
+                    if (list != null)
+                    {
+                        comboBoxCommodity.DisplayMemberPath = "CommodityName";
+                        comboBoxCommodity.SelectedValuePath = "Id";
+                        comboBoxCommodity.ItemsSource = list;
+                        comboBoxCommodity.SelectedItem = null;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(responseP));
+                }
+
             }
             catch (Exception ex)
             {
@@ -79,9 +79,17 @@ namespace WpfMotorZavod
                 try
                 {
                     int id = ((CommodityViewModel)comboBoxCommodity.SelectedItem).Id;
-                    CommodityViewModel product = serviceM.GetElement(id);
-                    int count = Convert.ToInt32(textBoxCount.Text);
-                    textBoxSum.Text = (count * product.Price).ToString();
+                    var responseP = APIClient.GetRequest("api/Commodity/Get/" + id);
+                    if (responseP.Result.IsSuccessStatusCode)
+                    {
+                        CommodityViewModel Commodity = APIClient.GetElement<CommodityViewModel>(responseP);
+                        int count = Convert.ToInt32(textBoxCount.Text);
+                        textBoxSum.Text = (count * (int)Commodity.Price).ToString();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(responseP));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -119,16 +127,23 @@ namespace WpfMotorZavod
             }
             try
             {
-                serviceG.CreateZakaz(new ZakazBindingModel
+                var response = APIClient.PostRequest("api/Main/CreateZakaz", new ZakazBindingModel
                 {
-                    ZakazchikId = ((ZakazchikViewModel)comboBoxClient.SelectedItem).Id,
-                    CommodityId = ((CommodityViewModel)comboBoxCommodity.SelectedItem).Id,
+                    ZakazchikId = Convert.ToInt32(comboBoxClient.SelectedValue),
+                    CommodityId = Convert.ToInt32(comboBoxCommodity.SelectedValue),
                     Count = Convert.ToInt32(textBoxCount.Text),
                     Sum = Convert.ToInt32(textBoxSum.Text)
                 });
-                MessageBox.Show("Сохранение прошло успешно", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
-                DialogResult = true;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information);
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

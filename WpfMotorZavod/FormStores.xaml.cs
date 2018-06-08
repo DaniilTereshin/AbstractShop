@@ -1,4 +1,6 @@
-﻿using System;
+﻿using AbstractShopService.BindingModels;
+using AbstractShopService.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,10 +13,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using AbstractShopService.Interfaces;
-using AbstractShopService.ViewModels;
-using Unity;
-using Unity.Attributes;
+
 namespace WpfMotorZavod
 {
     /// <summary>
@@ -22,16 +21,11 @@ namespace WpfMotorZavod
     /// </summary>
     public partial class FormStores : Window
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
 
-        private readonly IStoreService service;
-
-        public FormStores(IStoreService service)
+        public FormStores()
         {
             InitializeComponent();
             Loaded += FormStores_Load;
-            this.service = service;
         }
 
         private void FormStores_Load(object sender, EventArgs e)
@@ -43,12 +37,16 @@ namespace WpfMotorZavod
         {
             try
             {
-                List<StoreViewModel> list = service.GetList();
-                if (list != null)
+                var response = APIClient.GetRequest("api/Store/GetList");
+                if (response.Result.IsSuccessStatusCode)
                 {
-                    dataGridViewStores.ItemsSource = list;
-                    dataGridViewStores.Columns[0].Visibility = Visibility.Hidden;
-                    dataGridViewStores.Columns[1].Width = DataGridLength.Auto;
+                    List<StoreViewModel> list = APIClient.GetElement<List<StoreViewModel>>(response);
+                    if (list != null)
+                    {
+                        dataGridViewStores.ItemsSource = list;
+                        dataGridViewStores.Columns[0].Visibility = Visibility.Hidden;
+                        dataGridViewStores.Columns[1].Width = DataGridLength.Auto;
+                    }
                 }
             }
             catch (Exception ex)
@@ -59,7 +57,7 @@ namespace WpfMotorZavod
 
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FormStore>();
+            var form = new FormStore();
             if (form.ShowDialog() == true)
                 LoadData();
         }
@@ -68,7 +66,7 @@ namespace WpfMotorZavod
         {
             if (dataGridViewStores.SelectedItem != null)
             {
-                var form = Container.Resolve<FormStore>();
+                var form = new FormStore();
                 form.Id = ((StoreViewModel)dataGridViewStores.SelectedItem).Id;
                 if (form.ShowDialog() == true)
                 {
@@ -87,7 +85,11 @@ namespace WpfMotorZavod
                     int id = ((StoreViewModel)dataGridViewStores.SelectedItem).Id;
                     try
                     {
-                        service.DelElement(id);
+                        var response = APIClient.PostRequest("api/Store/DelElement", new ZakazchikBindingModel { Id = id });
+                        if (!response.Result.IsSuccessStatusCode)
+                        {
+                            throw new Exception(APIClient.GetError(response));
+                        }
                     }
                     catch (Exception ex)
                     {

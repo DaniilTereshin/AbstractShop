@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Пополнение склада" Height="173.233" Width="353.053">
     <Grid Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
-        <Label x:Name="labelStock" Content="Гараж:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
+        <Label x:Name="labelStock" Content="Склад:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <Label x:Name="labelComponent" Content="Деталь:" HorizontalAlignment="Left" Margin="10,41,0,0" VerticalAlignment="Top"/>
         <Label x:Name="labelCount" Content="Количество:" HorizontalAlignment="Left" Margin="10,72,0,0" VerticalAlignment="Top"/>
         <ComboBox x:Name="comboBoxStore" HorizontalAlignment="Left" Margin="92,14,0,0" VerticalAlignment="Top" Width="222"/>
