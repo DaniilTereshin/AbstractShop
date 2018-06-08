@@ -1,4 +1,5 @@
-﻿using AbstractShopService.BindingModels;
+﻿using AbstractShopRestApi.Services;
+using AbstractShopService.BindingModels;
 using AbstractShopService.Interfaces;
 using System;
 using System.Web.Http;
@@ -53,6 +54,17 @@ namespace AbstractShopRestApi.Controllers
         public void PutDetaliOnStore(StoreDetaliBindingModel model)
         {
             _service.PutDetaliOnStore(model);
+        }
+        [HttpGet]
+        public IHttpActionResult GetInfo()
+        {
+            ReflectionService service = new ReflectionService();
+            var list = service.GetInfoByAssembly();
+            if (list == null)
+            {
+                InternalServerError(new Exception("Нет данных"));
+            }
+            return Ok(list);
         }
     }
 }
