@@ -4,6 +4,7 @@ using AbstractShopService.Interfaces;
 using AbstractShopService.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AbstractShopService.ImplementationsList
 {
@@ -18,68 +19,32 @@ namespace AbstractShopService.ImplementationsList
 
         public List<ZakazViewModel> GetList()
         {
-            List<ZakazViewModel> result = new List<ZakazViewModel>();
-            for (int i = 0; i < source.Zakazs.Count; ++i)
-            {
-                string zakazchikFIO = string.Empty;
-                for (int j = 0; j < source.Zakazchiks.Count; ++j)
+            List<ZakazViewModel> result = source.Zakazs
+                .Select(rec => new ZakazViewModel
                 {
-                    if (source.Zakazchiks[j].Id == source.Zakazs[i].ZakazchikId)
-                    {
-                        zakazchikFIO = source.Zakazchiks[j].ZakazchikFIO;
-                        break;
-                    }
-                }
-                string CommodityTip = string.Empty;
-                for (int j = 0; j < source.Commoditys.Count; ++j)
-                {
-                    if (source.Commoditys[j].Id == source.Zakazs[i].CommodityId)
-                    {
-                        CommodityTip = source.Commoditys[j].CommodityName;
-                        break;
-                    }
-                }
-                string rabochiFIO = string.Empty;
-                if (source.Zakazs[i].RabochiId.HasValue)
-                {
-                    for (int j = 0; j < source.Rabochis.Count; ++j)
-                    {
-                        if (source.Rabochis[j].Id == source.Zakazs[i].RabochiId.Value)
-                        {
-                            rabochiFIO = source.Rabochis[j].RabochiFIO;
-                            break;
-                        }
-                    }
-                }
-                result.Add(new ZakazViewModel
-                {
-                    Id = source.Zakazs[i].Id,
-                    ZakazchikId = source.Zakazs[i].ZakazchikId,
-                    ZakazchikFIO = zakazchikFIO,
-                    CommodityId = source.Zakazs[i].CommodityId,
-                    CommodityName = CommodityTip,
-                    RabochiId = source.Zakazs[i].RabochiId,
-                    RabochiName = rabochiFIO,
-                    Count = source.Zakazs[i].Count,
-                    Sum = source.Zakazs[i].Sum,
-                    DateCreate = source.Zakazs[i].DateCreate.ToLongDateString(),
-                    DateImplement = source.Zakazs[i].DateImplement?.ToLongDateString(),
-                    Status = source.Zakazs[i].Status.ToString()
-                });
-            }
+                    Id = rec.Id,
+                    ZakazchikId = rec.ZakazchikId,
+                    CommodityId = rec.CommodityId,
+                    RabochiId = rec.RabochiId,
+                    DateCreate = rec.DateCreate.ToLongDateString(),
+                    DateImplement = rec.DateImplement?.ToLongDateString(),
+                    Status = rec.Status.ToString(),
+                    Count = rec.Count,
+                    Sum = rec.Sum,
+                    ZakazchikFIO = source.Zakazchiks
+                                    .FirstOrDefault(recC => recC.Id == rec.ZakazchikId)?.ZakazchikFIO,
+                    CommodityName = source.Commoditys
+                                    .FirstOrDefault(recP => recP.Id == rec.CommodityId)?.CommodityName,
+                    RabochiName = source.Rabochis
+                                    .FirstOrDefault(recI => recI.Id == rec.RabochiId)?.RabochiFIO
+                })
+                .ToList();
             return result;
         }
 
         public void CreateZakaz(ZakazBindingModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Zakazs.Count; ++i)
-            {
-                if (source.Zakazs[i].Id > maxId)
-                {
-                    maxId = source.Zakazchiks[i].Id;
-                }
-            }
+            int maxId = source.Zakazs.Count > 0 ? source.Zakazs.Max(rec => rec.Id) : 0;
             source.Zakazs.Add(new Zakaz
             {
                 Id = maxId + 1,
@@ -94,134 +59,92 @@ namespace AbstractShopService.ImplementationsList
 
         public void TakeZakazInWork(ZakazBindingModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Zakazs.Count; ++i)
-            {
-                if (source.Zakazs[i].Id == model.Id)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index == -1)
+            Zakaz element = source.Zakazs.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
             // смотрим по количеству компонентов на складах
-            for (int i = 0; i < source.CommodityDetalis.Count; ++i)
+            var CommodityDetalis = source.CommodityDetalis.Where(rec => rec.CommodityId == element.CommodityId);
+            foreach (var CommodityDetali in CommodityDetalis)
             {
-                if (source.CommodityDetalis[i].CommodityId == source.Zakazs[index].CommodityId)
+                int countOnStores = source.StoreDetalis
+                                            .Where(rec => rec.DetaliId == CommodityDetali.DetaliId)
+                                            .Sum(rec => rec.Count);
+                if (countOnStores < CommodityDetali.Count * element.Count)
                 {
-                    int countOnStores = 0;
-                    for (int j = 0; j < source.StoreDetalis.Count; ++j)
-                    {
-                        if (source.StoreDetalis[j].DetaliId == source.CommodityDetalis[i].DetaliId)
-                        {
-                            countOnStores += source.StoreDetalis[j].Count;
-                        }
-                    }
-                    if (countOnStores < source.CommodityDetalis[i].Count * source.Zakazs[index].Count)
-                    {
-                        for (int j = 0; j < source.Detalis.Count; ++j)
-                        {
-                            if (source.Detalis[j].Id == source.CommodityDetalis[i].DetaliId)
-                            {
-                                throw new Exception("Не достаточно компонента " + source.Detalis[j].DetaliName +
-                                    " требуется " + source.CommodityDetalis[i].Count + ", в наличии " + countOnStores);
-                            }
-                        }
-                    }
+                    var DetaliName = source.Detalis
+                                    .FirstOrDefault(rec => rec.Id == CommodityDetali.DetaliId);
+                    throw new Exception("Не достаточно компонента " + DetaliName?.DetaliName +
+                        " требуется " + CommodityDetali.Count + ", в наличии " + countOnStores);
                 }
             }
             // списываем
-            for (int i = 0; i < source.CommodityDetalis.Count; ++i)
+            foreach (var CommodityDetali in CommodityDetalis)
             {
-                if (source.CommodityDetalis[i].CommodityId == source.Zakazs[index].CommodityId)
+                int countOnStores = CommodityDetali.Count * element.Count;
+                var StoreDetalis = source.StoreDetalis
+                                            .Where(rec => rec.DetaliId == CommodityDetali.DetaliId);
+                foreach (var StoreDetali in StoreDetalis)
                 {
-                    int countOnStores = source.CommodityDetalis[i].Count * source.Zakazs[index].Count;
-                    for (int j = 0; j < source.StoreDetalis.Count; ++j)
+                    // компонентов на одном слкаде может не хватать
+                    if (StoreDetali.Count >= countOnStores)
                     {
-                        if (source.StoreDetalis[j].DetaliId == source.CommodityDetalis[i].DetaliId)
-                        {
-                            // компонентов на одном слкаде может не хватать
-                            if (source.StoreDetalis[j].Count >= countOnStores)
-                            {
-                                source.StoreDetalis[j].Count -= countOnStores;
-                                break;
-                            }
-                            else
-                            {
-                                countOnStores -= source.StoreDetalis[j].Count;
-                                source.StoreDetalis[j].Count = 0;
-                            }
-                        }
+                        StoreDetali.Count -= countOnStores;
+                        break;
+                    }
+                    else
+                    {
+                        countOnStores -= StoreDetali.Count;
+                        StoreDetali.Count = 0;
                     }
                 }
             }
-            source.Zakazs[index].RabochiId = model.RabochiId;
-            source.Zakazs[index].DateImplement = DateTime.Now;
-            source.Zakazs[index].Status = ZakazStatus.Выполняется;
+            element.RabochiId = model.RabochiId;
+            element.DateImplement = DateTime.Now;
+            element.Status = ZakazStatus.Выполняется;
         }
 
         public void FinishZakaz(int id)
         {
-            int index = -1;
-            for (int i = 0; i < source.Zakazs.Count; ++i)
-            {
-                if (source.Zakazchiks[i].Id == id)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index == -1)
+            Zakaz element = source.Zakazs.FirstOrDefault(rec => rec.Id == id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Zakazs[index].Status = ZakazStatus.Готов;
+            element.Status = ZakazStatus.Готов;
         }
 
         public void PayZakaz(int id)
         {
-            int index = -1;
-            for (int i = 0; i < source.Zakazs.Count; ++i)
-            {
-                if (source.Zakazchiks[i].Id == id)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            if (index == -1)
+            Zakaz element = source.Zakazs.FirstOrDefault(rec => rec.Id == id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Zakazs[index].Status = ZakazStatus.Оплачен;
+            element.Status = ZakazStatus.Оплачен;
         }
 
         public void PutDetaliOnStore(StoreDetaliBindingModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.StoreDetalis.Count; ++i)
+            StoreDetali element = source.StoreDetalis
+                                                .FirstOrDefault(rec => rec.StoreId == model.StoreId &&
+                                                                    rec.DetaliId == model.DetaliId);
+            if (element != null)
             {
-                if (source.StoreDetalis[i].StoreId == model.StoreId &&
-                    source.StoreDetalis[i].DetaliId == model.DetaliId)
-                {
-                    source.StoreDetalis[i].Count += model.Count;
-                    return;
-                }
-                if (source.StoreDetalis[i].Id > maxId)
-                {
-                    maxId = source.StoreDetalis[i].Id;
-                }
+                element.Count += model.Count;
             }
-            source.StoreDetalis.Add(new StoreDetali
+            else
             {
-                Id = ++maxId,
-                StoreId = model.StoreId,
-                DetaliId = model.DetaliId,
-                Count = model.Count
-            });
+                int maxId = source.StoreDetalis.Count > 0 ? source.StoreDetalis.Max(rec => rec.Id) : 0;
+                source.StoreDetalis.Add(new StoreDetali
+                {
+                    Id = ++maxId,
+                    StoreId = model.StoreId,
+                    DetaliId = model.DetaliId,
+                    Count = model.Count
+                });
+            }
         }
     }
 }
