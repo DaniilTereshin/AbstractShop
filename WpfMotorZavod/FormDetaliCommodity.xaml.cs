@@ -11,7 +11,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using AbstractShopService.BindingModels;
 using AbstractShopService.Interfaces;
 using AbstractShopService.ViewModels;
 using Unity;
@@ -19,52 +18,55 @@ using Unity.Attributes;
 namespace WpfMotorZavod
 {
     /// <summary>
-    /// Логика взаимодействия для FormPutOnStore.xaml
+    /// Логика взаимодействия для FormCommodityDetali.xaml
     /// </summary>
-    public partial class FormPutOnStore : Window
+    public partial class FormCommodityDetali : Window
     {
         [Dependency]
         public new IUnityContainer Container { get; set; }
 
-        private readonly IStoreService serviceB;
+        public CommodityDetaliViewModel Model { set { model = value; } get { return model; } }
 
-        private readonly IDetaliService serviceZ;
+        private readonly IDetaliService service;
 
-        private readonly IMainService serviceG;
+        private CommodityDetaliViewModel model;
 
-        public FormPutOnStore(IStoreService serviceB, IDetaliService serviceZ, IMainService serviceG)
+        public FormCommodityDetali(IDetaliService service)
         {
             InitializeComponent();
-            Loaded += FormPutOnStore_Load;
-            this.serviceB = serviceB;
-            this.serviceZ = serviceZ;
-            this.serviceG = serviceG;
+            Loaded += FormCommodityDetali_Load;
+            this.service = service;
         }
 
-        private void FormPutOnStore_Load(object sender, EventArgs e)
+        private void FormCommodityDetali_Load(object sender, EventArgs e)
         {
+            List<DetaliViewModel> list = service.GetList();
             try
             {
-                List<DetaliViewModel> listZ = serviceZ.GetList();
-                if (listZ != null)
+                if (list != null)
                 {
                     comboBoxDetali.DisplayMemberPath = "DetaliName";
                     comboBoxDetali.SelectedValuePath = "Id";
-                    comboBoxDetali.ItemsSource = listZ;
+                    comboBoxDetali.ItemsSource = list;
                     comboBoxDetali.SelectedItem = null;
-                }
-                List<StoreViewModel> listB = serviceB.GetList();
-                if (listB != null)
-                {
-                    comboBoxStore.DisplayMemberPath = "StoreName";
-                    comboBoxStore.SelectedValuePath = "Id";
-                    comboBoxStore.ItemsSource = listB;
-                    comboBoxStore.SelectedItem = null;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+            if (model != null)
+            {
+                comboBoxDetali.IsEnabled = false;
+                foreach (DetaliViewModel item in list)
+                {
+                    if (item.DetaliName == model.DetaliName)
+                    {
+                        comboBoxDetali.SelectedItem = item;
+                    }
+                }
+                textBoxCount.Text = model.Count.ToString();
             }
         }
 
@@ -80,21 +82,22 @@ namespace WpfMotorZavod
                 MessageBox.Show("Выберите заготовку", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            if (comboBoxStore.SelectedItem == null)
-            {
-                MessageBox.Show("Выберите базу", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                return;
-            }
             try
             {
-                serviceG.PutDetaliOnStore(new StoreDetaliBindingModel
+                if (model == null)
                 {
-                    DetaliId = Convert.ToInt32(comboBoxDetali.SelectedValue),
-                    StoreId = Convert.ToInt32(comboBoxStore.SelectedValue),
-                    Count = Convert.ToInt32(textBoxCount.Text)
-                });
-                MessageBox.Show("Сохранение прошло успешно", "Информация",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                    model = new CommodityDetaliViewModel
+                    {
+                        DetaliId = Convert.ToInt32(comboBoxDetali.SelectedValue),
+                        DetaliName = comboBoxDetali.Text,
+                        Count = Convert.ToInt32(textBoxCount.Text)
+                    };
+                }
+                else
+                {
+                    model.Count = Convert.ToInt32(textBoxCount.Text);
+                }
+                MessageBox.Show("Сохранение прошло успешно", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }

@@ -1,8 +1,5 @@
-﻿using AbstractShopService.Interfaces;
-using AbstractShopService.ViewModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,14 +11,15 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using AbstractShopService.Interfaces;
+using AbstractShopService.ViewModels;
 using Unity;
 using Unity.Attributes;
-
 namespace WpfMotorZavod
 {
-    // <summary>
-    // Логика взаимодействия для FormCommoditys.xaml
-    // </summary>
+    /// <summary>
+    /// Логика взаимодействия для FormCommoditys.xaml
+    /// </summary>
     public partial class FormCommoditys : Window
     {
         [Dependency]
@@ -48,10 +46,10 @@ namespace WpfMotorZavod
                 List<CommodityViewModel> list = service.GetList();
                 if (list != null)
                 {
-                    dataGridViewProducts.ItemsSource = list;
-                    dataGridViewProducts.Columns[0].Visibility = Visibility.Hidden;
-                    dataGridViewProducts.Columns[1].Width = DataGridLength.Auto;
-                    dataGridViewProducts.Columns[3].Visibility = Visibility.Hidden;
+                    dataGridViewCommoditys.ItemsSource = list;
+                    dataGridViewCommoditys.Columns[0].Visibility = Visibility.Hidden;
+                    dataGridViewCommoditys.Columns[1].Width = DataGridLength.Auto;
+                    dataGridViewCommoditys.Columns[3].Visibility = Visibility.Hidden;
                 }
             }
             catch (Exception ex)
@@ -69,10 +67,10 @@ namespace WpfMotorZavod
 
         private void buttonUpd_Click(object sender, EventArgs e)
         {
-            if (dataGridViewProducts.SelectedItem != null)
+            if (dataGridViewCommoditys.SelectedItem != null)
             {
                 var form = Container.Resolve<FormCommodity>();
-                form.ID = ((CommodityViewModel)dataGridViewProducts.SelectedItem).Id;
+                form.Id = ((CommodityViewModel)dataGridViewCommoditys.SelectedItem).Id;
                 if (form.ShowDialog() == true)
                     LoadData();
             }
@@ -80,13 +78,13 @@ namespace WpfMotorZavod
 
         private void buttonDel_Click(object sender, EventArgs e)
         {
-            if (dataGridViewProducts.SelectedItem != null)
+            if (dataGridViewCommoditys.SelectedItem != null)
             {
                 if (MessageBox.Show("Удалить запись?", "Внимание",
                 MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
 
-                    int id = ((CommodityViewModel)dataGridViewProducts.SelectedItem).Id;
+                    int id = ((CommodityViewModel)dataGridViewCommoditys.SelectedItem).Id;
                     try
                     {
                         service.DelElement(id);

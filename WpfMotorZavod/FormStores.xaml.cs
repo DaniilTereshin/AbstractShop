@@ -1,8 +1,5 @@
-﻿using AbstractShopService.Interfaces;
-using AbstractShopService.ViewModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,13 +11,14 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using AbstractShopService.Interfaces;
+using AbstractShopService.ViewModels;
 using Unity;
 using Unity.Attributes;
-
 namespace WpfMotorZavod
 {
     /// <summary>
-    /// Логика взаимодействия для Stores.xaml
+    /// Логика взаимодействия для FormStores.xaml
     /// </summary>
     public partial class FormStores : Window
     {
@@ -71,7 +69,7 @@ namespace WpfMotorZavod
             if (dataGridViewStores.SelectedItem != null)
             {
                 var form = Container.Resolve<FormStore>();
-                form.ID = ((StoreViewModel)dataGridViewStores.SelectedItem).Id;
+                form.Id = ((StoreViewModel)dataGridViewStores.SelectedItem).Id;
                 if (form.ShowDialog() == true)
                 {
                     LoadData();
