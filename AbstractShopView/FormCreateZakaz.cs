@@ -1,52 +1,53 @@
 ﻿using AbstractShopService.BindingModels;
-using AbstractShopService.Interfaces;
 using AbstractShopService.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractShopView
 {
     public partial class FormCreateZakaz : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly IZakazchikService serviceC;
-
-        private readonly ICommodityService serviceP;
-
-        private readonly IMainService serviceM;
-
-        public FormCreateZakaz(IZakazchikService serviceC, ICommodityService serviceP, IMainService serviceM)
+        public FormCreateZakaz()
         {
             InitializeComponent();
-            this.serviceC = serviceC;
-            this.serviceP = serviceP;
-            this.serviceM = serviceM;
         }
 
         private void FormCreateZakaz_Load(object sender, EventArgs e)
         {
             try
             {
-                List<ZakazchikViewModel> listC = serviceC.GetList();
-                if (listC != null)
+                var responseC = APIClient.GetRequest("api/Zakazchik/GetList");
+                if (responseC.Result.IsSuccessStatusCode)
                 {
-                    comboBoxZakazchik.DisplayMember = "ZakazchikFIO";
-                    comboBoxZakazchik.ValueMember = "Id";
-                    comboBoxZakazchik.DataSource = listC;
-                    comboBoxZakazchik.SelectedItem = null;
+                    List<ZakazchikViewModel> list = APIClient.GetElement<List<ZakazchikViewModel>>(responseC);
+                    if (list != null)
+                    {
+                        comboBoxZakazchik.DisplayMember = "ZakazchikFIO";
+                        comboBoxZakazchik.ValueMember = "Id";
+                        comboBoxZakazchik.DataSource = list;
+                        comboBoxZakazchik.SelectedItem = null;
+                    }
                 }
-                List<CommodityViewModel> listP = serviceP.GetList();
-                if (listP != null)
+                else
                 {
-                    comboBoxProduct.DisplayMember = "ProductName";
-                    comboBoxProduct.ValueMember = "Id";
-                    comboBoxProduct.DataSource = listP;
-                    comboBoxProduct.SelectedItem = null;
+                    throw new Exception(APIClient.GetError(responseC));
+                }
+                var responseP = APIClient.GetRequest("api/Commodity/GetList");
+                if (responseP.Result.IsSuccessStatusCode)
+                {
+                    List<CommodityViewModel> list = APIClient.GetElement<List<CommodityViewModel>>(responseP);
+                    if (list != null)
+                    {
+                        comboBoxProduct.DisplayMember = "CommodityName";
+                        comboBoxProduct.ValueMember = "Id";
+                        comboBoxProduct.DataSource = list;
+                        comboBoxProduct.SelectedItem = null;
+                    }
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(responseP));
                 }
             }
             catch (Exception ex)
@@ -62,11 +63,19 @@ namespace AbstractShopView
                 try
                 {
                     int id = Convert.ToInt32(comboBoxProduct.SelectedValue);
-                    CommodityViewModel product = serviceP.GetElement(id);
-                    int count = Convert.ToInt32(textBoxCount.Text);
-                    textBoxSum.Text = (count * product.Price).ToString();
+                    var responseP = APIClient.GetRequest("api/Commodity/Get/" + id);
+                    if (responseP.Result.IsSuccessStatusCode)
+                    {
+                        CommodityViewModel Commodity = APIClient.GetElement<CommodityViewModel>(responseP);
+                        int count = Convert.ToInt32(textBoxCount.Text);
+                        textBoxSum.Text = (count * (int)Commodity.Price).ToString();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(responseP));
+                    }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
@@ -102,16 +111,23 @@ namespace AbstractShopView
             }
             try
             {
-                serviceM.CreateZakaz(new ZakazBindingModel
+                var response = APIClient.PostRequest("api/Main/CreateZakaz", new ZakazBindingModel
                 {
                     ZakazchikId = Convert.ToInt32(comboBoxZakazchik.SelectedValue),
                     CommodityId = Convert.ToInt32(comboBoxProduct.SelectedValue),
                     Count = Convert.ToInt32(textBoxCount.Text),
                     Sum = Convert.ToInt32(textBoxSum.Text)
                 });
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

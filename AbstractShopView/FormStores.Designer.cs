@@ -90,8 +90,9 @@ namespace AbstractShopView
             this.dataGridView.ReadOnly = true;
             this.dataGridView.Size = new System.Drawing.Size(350, 481);
             this.dataGridView.TabIndex = 0;
+           // this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
             // 
-            // FormStocks
+            // FormStores
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -101,7 +102,7 @@ namespace AbstractShopView
             this.Controls.Add(this.buttonUpd);
             this.Controls.Add(this.buttonAdd);
             this.Controls.Add(this.dataGridView);
-            this.Name = "FormStocks";
+            this.Name = "FormStores";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Склады";
             this.Load += new System.EventHandler(this.FormStocks_Load);

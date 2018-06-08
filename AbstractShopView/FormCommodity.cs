@@ -1,31 +1,24 @@
 ﻿using AbstractShopService.BindingModels;
-using AbstractShopService.Interfaces;
 using AbstractShopService.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractShopView
 {
     public partial class FormCommodity : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly ICommodityService service;
 
         private int? id;
 
-        private List<CommodityDetaliViewModel> productComponents;
+        private List<CommodityDetaliViewModel> CommodityDetalis;
 
-        public FormCommodity(ICommodityService service)
+        public FormCommodity()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void FormProduct_Load(object sender, EventArgs e)
@@ -34,13 +27,18 @@ namespace AbstractShopView
             {
                 try
                 {
-                    CommodityViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Commodity/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxName.Text = view.CommodityName;
-                        textBoxPrice.Text = view.Price.ToString();
-                        productComponents = view.CommodityDetalis;
+                        var Commodity = APIClient.GetElement<CommodityViewModel>(response);
+                        textBoxName.Text = Commodity.CommodityName;
+                        textBoxPrice.Text = Commodity.Price.ToString();
+                        CommodityDetalis = Commodity.CommodityDetalis;
                         LoadData();
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)
@@ -50,7 +48,7 @@ namespace AbstractShopView
             }
             else
             {
-                productComponents = new List<CommodityDetaliViewModel>();
+                CommodityDetalis = new List<CommodityDetaliViewModel>();
             }
         }
 
@@ -58,10 +56,10 @@ namespace AbstractShopView
         {
             try
             {
-                if (productComponents != null)
+                if (CommodityDetalis != null)
                 {
                     dataGridView.DataSource = null;
-                    dataGridView.DataSource = productComponents;
+                    dataGridView.DataSource = CommodityDetalis;
                     dataGridView.Columns[0].Visible = false;
                     dataGridView.Columns[1].Visible = false;
                     dataGridView.Columns[2].Visible = false;
@@ -76,16 +74,16 @@ namespace AbstractShopView
 
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FormCommodityComponent>();
+            var form = new FormCommodityDetali();
             if (form.ShowDialog() == DialogResult.OK)
             {
-                if(form.Model != null)
+                if (form.Model != null)
                 {
-                    if(id.HasValue)
+                    if (id.HasValue)
                     {
                         form.Model.CommodityId = id.Value;
                     }
-                    productComponents.Add(form.Model);
+                    CommodityDetalis.Add(form.Model);
                 }
                 LoadData();
             }
@@ -95,11 +93,11 @@ namespace AbstractShopView
         {
             if (dataGridView.SelectedRows.Count == 1)
             {
-                var form = Container.Resolve<FormCommodityComponent>();
-                form.Model = productComponents[dataGridView.SelectedRows[0].Cells[0].RowIndex];
+                var form = new FormCommodityDetali();
+                form.Model = CommodityDetalis[dataGridView.SelectedRows[0].Cells[0].RowIndex];
                 if (form.ShowDialog() == DialogResult.OK)
                 {
-                    productComponents[dataGridView.SelectedRows[0].Cells[0].RowIndex] = form.Model;
+                    CommodityDetalis[dataGridView.SelectedRows[0].Cells[0].RowIndex] = form.Model;
                     LoadData();
                 }
             }
@@ -113,7 +111,7 @@ namespace AbstractShopView
                 {
                     try
                     {
-                        productComponents.RemoveAt(dataGridView.SelectedRows[0].Cells[0].RowIndex);
+                        CommodityDetalis.RemoveAt(dataGridView.SelectedRows[0].Cells[0].RowIndex);
                     }
                     catch (Exception ex)
                     {
@@ -141,46 +139,54 @@ namespace AbstractShopView
                 MessageBox.Show("Заполните цену", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
-            if (productComponents == null || productComponents.Count == 0)
+            if (CommodityDetalis == null || CommodityDetalis.Count == 0)
             {
                 MessageBox.Show("Заполните компоненты", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             try
             {
-                List<CommodityDetaliBindingModel> productComponentBM = new List<CommodityDetaliBindingModel>();
-                for (int i = 0; i < productComponents.Count; ++i)
+                List<CommodityDetaliBindingModel> CommodityDetaliBM = new List<CommodityDetaliBindingModel>();
+                for (int i = 0; i < CommodityDetalis.Count; ++i)
                 {
-                    productComponentBM.Add(new CommodityDetaliBindingModel
+                    CommodityDetaliBM.Add(new CommodityDetaliBindingModel
                     {
-                        Id = productComponents[i].Id,
-                        CommodityId = productComponents[i].CommodityId,
-                        DetaliId = productComponents[i].DetaliId,
-                        Count = productComponents[i].Count
+                        Id = CommodityDetalis[i].Id,
+                        CommodityId = CommodityDetalis[i].CommodityId,
+                        DetaliId = CommodityDetalis[i].DetaliId,
+                        Count = CommodityDetalis[i].Count
                     });
                 }
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new CommodityBindingModel
+                    response = APIClient.PostRequest("api/Commodity/UpdElement", new CommodityBindingModel
                     {
                         Id = id.Value,
                         CommodityName = textBoxName.Text,
                         Price = Convert.ToInt32(textBoxPrice.Text),
-                        CommodityDetalis = productComponentBM
+                        CommodityDetalis = CommodityDetaliBM
                     });
                 }
                 else
                 {
-                    service.AddElement(new CommodityBindingModel
+                    response = APIClient.PostRequest("api/Commodity/AddElement", new CommodityBindingModel
                     {
                         CommodityName = textBoxName.Text,
                         Price = Convert.ToInt32(textBoxPrice.Text),
-                        CommodityDetalis = productComponentBM
+                        CommodityDetalis = CommodityDetaliBM
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {

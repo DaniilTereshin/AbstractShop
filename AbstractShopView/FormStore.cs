@@ -1,28 +1,21 @@
 ﻿using AbstractShopService.BindingModels;
-using AbstractShopService.Interfaces;
 using AbstractShopService.ViewModels;
 using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractShopView
 {
     public partial class FormStore : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly IStoreService service;
 
         private int? id;
 
-        public FormStore(IStoreService service)
+        public FormStore()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void FormStock_Load(object sender, EventArgs e)
@@ -31,15 +24,20 @@ namespace AbstractShopView
             {
                 try
                 {
-                    StoreViewModel view = service.GetElement(id.Value);
-                    if (view != null)
+                    var response = APIClient.GetRequest("api/Store/Get/" + id.Value);
+                    if (response.Result.IsSuccessStatusCode)
                     {
-                        textBoxName.Text = view.StoreName;
-                        dataGridView.DataSource = view.StoreDetalis;
+                        var Store = APIClient.GetElement<StoreViewModel>(response);
+                        textBoxName.Text = Store.StoreName;
+                        dataGridView.DataSource = Store.StoreDetalis;
                         dataGridView.Columns[0].Visible = false;
                         dataGridView.Columns[1].Visible = false;
                         dataGridView.Columns[2].Visible = false;
                         dataGridView.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                    }
+                    else
+                    {
+                        throw new Exception(APIClient.GetError(response));
                     }
                 }
                 catch (Exception ex)
@@ -58,9 +56,10 @@ namespace AbstractShopView
             }
             try
             {
+                Task<HttpResponseMessage> response;
                 if (id.HasValue)
                 {
-                    service.UpdElement(new StoreBindingModel
+                    response = APIClient.PostRequest("api/Store/UpdElement", new StoreBindingModel
                     {
                         Id = id.Value,
                         StoreName = textBoxName.Text
@@ -68,14 +67,21 @@ namespace AbstractShopView
                 }
                 else
                 {
-                    service.AddElement(new StoreBindingModel
+                    response = APIClient.PostRequest("api/Store/AddElement", new StoreBindingModel
                     {
                         StoreName = textBoxName.Text
                     });
                 }
-                MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                DialogResult = DialogResult.OK;
-                Close();
+                if (response.Result.IsSuccessStatusCode)
+                {
+                    MessageBox.Show("Сохранение прошло успешно", "Сообщение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+                else
+                {
+                    throw new Exception(APIClient.GetError(response));
+                }
             }
             catch (Exception ex)
             {
