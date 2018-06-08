@@ -35,6 +35,7 @@ namespace AbstractShopView
             currentContainer.RegisterType<ICommodityService, CommodityServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IStoreService, StoreServiceBD>(new HierarchicalLifetimeManager());
             currentContainer.RegisterType<IMainService, MainServiceBD>(new HierarchicalLifetimeManager());
+            currentContainer.RegisterType<IReportService, ReportServiceBD>(new HierarchicalLifetimeManager());
 
             return currentContainer;
         }

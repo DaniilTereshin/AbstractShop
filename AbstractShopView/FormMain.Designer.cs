@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace AbstractShopView
+﻿namespace AbstractShopView
 {
     partial class FormMain
     {
@@ -38,10 +36,14 @@ namespace AbstractShopView
             this.складыToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.сотрудникиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.пополнитьСкладToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.buttonPayZakaz = new System.Windows.Forms.Button();
-            this.buttonZakazReady = new System.Windows.Forms.Button();
-            this.buttonTakeZakazInWork = new System.Windows.Forms.Button();
-            this.buttonCreateZakaz = new System.Windows.Forms.Button();
+            this.отчетыToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.прайсИзделийToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.загруженностьСкладовToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.заказыКлиентовToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buttonPayOrder = new System.Windows.Forms.Button();
+            this.buttonOrderReady = new System.Windows.Forms.Button();
+            this.buttonTakeOrderInWork = new System.Windows.Forms.Button();
+            this.buttonCreateOrder = new System.Windows.Forms.Button();
             this.dataGridView = new System.Windows.Forms.DataGridView();
             this.buttonRef = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
@@ -52,7 +54,8 @@ namespace AbstractShopView
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.справочникиToolStripMenuItem,
-            this.пополнитьСкладToolStripMenuItem});
+            this.пополнитьСкладToolStripMenuItem,
+            this.отчетыToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(1049, 24);
@@ -113,45 +116,76 @@ namespace AbstractShopView
             this.пополнитьСкладToolStripMenuItem.Text = "Пополнить склад";
             this.пополнитьСкладToolStripMenuItem.Click += new System.EventHandler(this.пополнитьСкладToolStripMenuItem_Click);
             // 
-            // buttonPayZakaz
+            // отчетыToolStripMenuItem
             // 
-            this.buttonPayZakaz.Location = new System.Drawing.Point(888, 200);
-            this.buttonPayZakaz.Name = "buttonPayZakaz";
-            this.buttonPayZakaz.Size = new System.Drawing.Size(149, 23);
-            this.buttonPayZakaz.TabIndex = 4;
-            this.buttonPayZakaz.Text = "Заказ оплачен";
-            this.buttonPayZakaz.UseVisualStyleBackColor = true;
-            this.buttonPayZakaz.Click += new System.EventHandler(this.buttonPayZakaz_Click);
+            this.отчетыToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.прайсИзделийToolStripMenuItem,
+            this.загруженностьСкладовToolStripMenuItem,
+            this.заказыКлиентовToolStripMenuItem});
+            this.отчетыToolStripMenuItem.Name = "отчетыToolStripMenuItem";
+            this.отчетыToolStripMenuItem.Size = new System.Drawing.Size(60, 20);
+            this.отчетыToolStripMenuItem.Text = "Отчеты";
             // 
-            // buttonZakazReady
+            // прайсИзделийToolStripMenuItem
             // 
-            this.buttonZakazReady.Location = new System.Drawing.Point(888, 148);
-            this.buttonZakazReady.Name = "buttonZakazReady";
-            this.buttonZakazReady.Size = new System.Drawing.Size(149, 23);
-            this.buttonZakazReady.TabIndex = 3;
-            this.buttonZakazReady.Text = "Заказ готов";
-            this.buttonZakazReady.UseVisualStyleBackColor = true;
-            this.buttonZakazReady.Click += new System.EventHandler(this.buttonZakazReady_Click);
+            this.прайсИзделийToolStripMenuItem.Name = "прайсИзделийToolStripMenuItem";
+            this.прайсИзделийToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.прайсИзделийToolStripMenuItem.Text = "Прайс изделий";
+            this.прайсИзделийToolStripMenuItem.Click += new System.EventHandler(this.прайсИзделийToolStripMenuItem_Click);
             // 
-            // buttonTakeZakazInWork
+            // загруженностьСкладовToolStripMenuItem
             // 
-            this.buttonTakeZakazInWork.Location = new System.Drawing.Point(888, 101);
-            this.buttonTakeZakazInWork.Name = "buttonTakeZakazInWork";
-            this.buttonTakeZakazInWork.Size = new System.Drawing.Size(149, 23);
-            this.buttonTakeZakazInWork.TabIndex = 2;
-            this.buttonTakeZakazInWork.Text = "Отдать на выполнение";
-            this.buttonTakeZakazInWork.UseVisualStyleBackColor = true;
-            this.buttonTakeZakazInWork.Click += new System.EventHandler(this.buttonTakeZakazInWork_Click);
+            this.загруженностьСкладовToolStripMenuItem.Name = "загруженностьСкладовToolStripMenuItem";
+            this.загруженностьСкладовToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.загруженностьСкладовToolStripMenuItem.Text = "Загруженность складов";
+            this.загруженностьСкладовToolStripMenuItem.Click += new System.EventHandler(this.загруженностьСкладовToolStripMenuItem_Click);
             // 
-            // buttonCreateZakaz
+            // заказыКлиентовToolStripMenuItem
             // 
-            this.buttonCreateZakaz.Location = new System.Drawing.Point(888, 50);
-            this.buttonCreateZakaz.Name = "buttonCreateZakaz";
-            this.buttonCreateZakaz.Size = new System.Drawing.Size(149, 23);
-            this.buttonCreateZakaz.TabIndex = 1;
-            this.buttonCreateZakaz.Text = "Создать заказ";
-            this.buttonCreateZakaz.UseVisualStyleBackColor = true;
-            this.buttonCreateZakaz.Click += new System.EventHandler(this.buttonCreateZakaz_Click);
+            this.заказыКлиентовToolStripMenuItem.Name = "заказыКлиентовToolStripMenuItem";
+            this.заказыКлиентовToolStripMenuItem.Size = new System.Drawing.Size(205, 22);
+            this.заказыКлиентовToolStripMenuItem.Text = "Заказы клиентов";
+            this.заказыКлиентовToolStripMenuItem.Click += new System.EventHandler(this.заказыКлиентовToolStripMenuItem_Click);
+            // 
+            // buttonPayOrder
+            // 
+            this.buttonPayOrder.Location = new System.Drawing.Point(888, 200);
+            this.buttonPayOrder.Name = "buttonPayOrder";
+            this.buttonPayOrder.Size = new System.Drawing.Size(149, 23);
+            this.buttonPayOrder.TabIndex = 4;
+            this.buttonPayOrder.Text = "Заказ оплачен";
+            this.buttonPayOrder.UseVisualStyleBackColor = true;
+            this.buttonPayOrder.Click += new System.EventHandler(this.buttonPayZakaz_Click);
+            // 
+            // buttonOrderReady
+            // 
+            this.buttonOrderReady.Location = new System.Drawing.Point(888, 148);
+            this.buttonOrderReady.Name = "buttonOrderReady";
+            this.buttonOrderReady.Size = new System.Drawing.Size(149, 23);
+            this.buttonOrderReady.TabIndex = 3;
+            this.buttonOrderReady.Text = "Заказ готов";
+            this.buttonOrderReady.UseVisualStyleBackColor = true;
+            this.buttonOrderReady.Click += new System.EventHandler(this.buttonZakazReady_Click);
+            // 
+            // buttonTakeOrderInWork
+            // 
+            this.buttonTakeOrderInWork.Location = new System.Drawing.Point(888, 101);
+            this.buttonTakeOrderInWork.Name = "buttonTakeOrderInWork";
+            this.buttonTakeOrderInWork.Size = new System.Drawing.Size(149, 23);
+            this.buttonTakeOrderInWork.TabIndex = 2;
+            this.buttonTakeOrderInWork.Text = "Отдать на выполнение";
+            this.buttonTakeOrderInWork.UseVisualStyleBackColor = true;
+            this.buttonTakeOrderInWork.Click += new System.EventHandler(this.buttonTakeZakazInWork_Click);
+            // 
+            // buttonCreateOrder
+            // 
+            this.buttonCreateOrder.Location = new System.Drawing.Point(888, 50);
+            this.buttonCreateOrder.Name = "buttonCreateOrder";
+            this.buttonCreateOrder.Size = new System.Drawing.Size(149, 23);
+            this.buttonCreateOrder.TabIndex = 1;
+            this.buttonCreateOrder.Text = "Создать заказ";
+            this.buttonCreateOrder.UseVisualStyleBackColor = true;
+            this.buttonCreateOrder.Click += new System.EventHandler(this.buttonCreateZakaz_Click);
             // 
             // dataGridView
             // 
@@ -180,12 +214,12 @@ namespace AbstractShopView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ZakazchikSize = new System.Drawing.Size(1049, 301);
+            this.ClientSize = new System.Drawing.Size(1049, 301);
             this.Controls.Add(this.buttonRef);
-            this.Controls.Add(this.buttonPayZakaz);
-            this.Controls.Add(this.buttonZakazReady);
-            this.Controls.Add(this.buttonTakeZakazInWork);
-            this.Controls.Add(this.buttonCreateZakaz);
+            this.Controls.Add(this.buttonPayOrder);
+            this.Controls.Add(this.buttonOrderReady);
+            this.Controls.Add(this.buttonTakeOrderInWork);
+            this.Controls.Add(this.buttonCreateOrder);
             this.Controls.Add(this.dataGridView);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
@@ -209,13 +243,15 @@ namespace AbstractShopView
         private System.Windows.Forms.ToolStripMenuItem сотрудникиToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem пополнитьСкладToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem клиентыToolStripMenuItem;
-        private System.Windows.Forms.Button buttonPayZakaz;
-        private System.Windows.Forms.Button buttonZakazReady;
-        private System.Windows.Forms.Button buttonTakeZakazInWork;
-        private System.Windows.Forms.Button buttonCreateZakaz;
+        private System.Windows.Forms.Button buttonPayOrder;
+        private System.Windows.Forms.Button buttonOrderReady;
+        private System.Windows.Forms.Button buttonTakeOrderInWork;
+        private System.Windows.Forms.Button buttonCreateOrder;
         private System.Windows.Forms.DataGridView dataGridView;
         private System.Windows.Forms.Button buttonRef;
-        private Size ZakazchikSize;
+        private System.Windows.Forms.ToolStripMenuItem отчетыToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem прайсИзделийToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem загруженностьСкладовToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem заказыКлиентовToolStripMenuItem;
     }
 }
-
