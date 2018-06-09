@@ -4,6 +4,7 @@ using AbstractShopService.Interfaces;
 using AbstractShopService.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AbstractShopService.ImplementationsList
 {
@@ -18,103 +19,64 @@ namespace AbstractShopService.ImplementationsList
 
         public List<CommodityViewModel> GetList()
         {
-            List<CommodityViewModel> result = new List<CommodityViewModel>();
-            for (int i = 0; i < source.Commoditys.Count; ++i)
-            {
-                // требуется дополнительно получить список компонентов для изделия и их количество
-                List<CommodityDetaliViewModel> commodityDetalis = new List<CommodityDetaliViewModel>();
-                for (int j = 0; j < source.CommodityDetalis.Count; ++j)
+            List<CommodityViewModel> result = source.Commoditys
+                .Select(rec => new CommodityViewModel
                 {
-                    if (source.CommodityDetalis[j].CommodityId == source.Commoditys[i].Id)
-                    {
-                        string detaliDlyaDvigatelya = string.Empty;
-                        for (int k = 0; k < source.Detalis.Count; ++k)
-                        {
-                            if (source.CommodityDetalis[j].DetaliId == source.Detalis[k].Id)
+                    Id = rec.Id,
+                    CommodityName = rec.CommodityName,
+                    Price = rec.Price,
+                    CommodityDetalis = source.CommodityDetalis
+                            .Where(recPC => recPC.CommodityId == rec.Id)
+                            .Select(recPC => new CommodityDetaliViewModel
                             {
-                                detaliDlyaDvigatelya = source.Detalis[k].DetaliName;
-                                break;
-                            }
-                        }
-                        commodityDetalis.Add(new CommodityDetaliViewModel
-                        {
-                            Id = source.CommodityDetalis[j].Id,
-                            CommodityId = source.CommodityDetalis[j].CommodityId,
-                            DetaliId = source.CommodityDetalis[j].DetaliId,
-                            DetaliName = detaliDlyaDvigatelya,
-                            Count = source.CommodityDetalis[j].Count
-                        });
-                    }
-                }
-                result.Add(new CommodityViewModel
-                {
-                    Id = source.Commoditys[i].Id,
-                    CommodityName = source.Commoditys[i].CommodityName,
-                    Price = source.Commoditys[i].Price,
-                    CommodityDetalis = commodityDetalis
-                });
-            }
+                                Id = recPC.Id,
+                                CommodityId = recPC.CommodityId,
+                                DetaliId = recPC.DetaliId,
+                                DetaliName = source.Detalis
+                                    .FirstOrDefault(recC => recC.Id == recPC.DetaliId)?.DetaliName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                })
+                .ToList();
             return result;
         }
 
         public CommodityViewModel GetElement(int id)
         {
-            for (int i = 0; i < source.Commoditys.Count; ++i)
+            Commodity element = source.Commoditys.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                // требуется дополнительно получить список компонентов для изделия и их количество
-                List<CommodityDetaliViewModel> commodityDetalis = new List<CommodityDetaliViewModel>();
-                for (int j = 0; j < source.CommodityDetalis.Count; ++j)
+                return new CommodityViewModel
                 {
-                    if (source.CommodityDetalis[j].CommodityId == source.Commoditys[i].Id)
-                    {
-                        string detaliDlyaDvigatelya = string.Empty;
-                        for (int k = 0; k < source.Detalis.Count; ++k)
-                        {
-                            if (source.CommodityDetalis[j].DetaliId == source.Detalis[k].Id)
+                    Id = element.Id,
+                    CommodityName = element.CommodityName,
+                    Price = element.Price,
+                    CommodityDetalis = source.CommodityDetalis
+                            .Where(recPC => recPC.CommodityId == element.Id)
+                            .Select(recPC => new CommodityDetaliViewModel
                             {
-                                detaliDlyaDvigatelya = source.Detalis[k].DetaliName;
-                                break;
-                            }
-                        }
-                        commodityDetalis.Add(new CommodityDetaliViewModel
-                        {
-                            Id = source.CommodityDetalis[j].Id,
-                            CommodityId = source.CommodityDetalis[j].CommodityId,
-                            DetaliId = source.CommodityDetalis[j].DetaliId,
-                            DetaliName = detaliDlyaDvigatelya,
-                            Count = source.CommodityDetalis[j].Count
-                        });
-                    }
-                }
-                if (source.Commoditys[i].Id == id)
-                {
-                    return new CommodityViewModel
-                    {
-                        Id = source.Commoditys[i].Id,
-                        CommodityName = source.Commoditys[i].CommodityName,
-                        Price = source.Commoditys[i].Price,
-                        CommodityDetalis = commodityDetalis
-                    };
-                }
+                                Id = recPC.Id,
+                                CommodityId = recPC.CommodityId,
+                                DetaliId = recPC.DetaliId,
+                                DetaliName = source.Detalis
+                                        .FirstOrDefault(recC => recC.Id == recPC.DetaliId)?.DetaliName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                };
             }
-
             throw new Exception("Элемент не найден");
         }
 
         public void AddElement(CommodityBindingModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Commoditys.Count; ++i)
+            Commodity element = source.Commoditys.FirstOrDefault(rec => rec.CommodityName == model.CommodityName);
+            if (element != null)
             {
-                if (source.Commoditys[i].Id > maxId)
-                {
-                    maxId = source.Commoditys[i].Id;
-                }
-                if (source.Commoditys[i].CommodityName == model.CommodityName)
-                {
-                    throw new Exception("Уже есть изделие с таким названием");
-                }
+                throw new Exception("Уже есть самолет с таким названием");
             }
+            int maxId = source.Commoditys.Count > 0 ? source.Commoditys.Max(rec => rec.Id) : 0;
             source.Commoditys.Add(new Commodity
             {
                 Id = maxId + 1,
@@ -122,143 +84,102 @@ namespace AbstractShopService.ImplementationsList
                 Price = model.Price
             });
             // компоненты для изделия
-            int maxPCId = 0;
-            for (int i = 0; i < source.CommodityDetalis.Count; ++i)
-            {
-                if (source.Commoditys[i].Id > maxPCId)
-                {
-                    maxPCId = source.CommodityDetalis[i].Id;
-                }
-            }
+            int maxPCId = source.CommodityDetalis.Count > 0 ?
+                                    source.CommodityDetalis.Max(rec => rec.Id) : 0;
             // убираем дубли по компонентам
-            for (int i = 0; i < model.CommodityDetalis.Count; ++i)
-            {
-                for (int j = 1; j < model.CommodityDetalis.Count; ++j)
-                {
-                    if (model.CommodityDetalis[i].DetaliId ==
-                        model.CommodityDetalis[j].DetaliId)
-                    {
-                        model.CommodityDetalis[i].Count +=
-                            model.CommodityDetalis[j].Count;
-                        model.CommodityDetalis.RemoveAt(j--);
-                    }
-                }
-            }
+            var groupDetalis = model.CommodityDetalis
+                                        .GroupBy(rec => rec.DetaliId)
+                                        .Select(rec => new
+                                        {
+                                            DetaliId = rec.Key,
+                                            Count = rec.Sum(r => r.Count)
+                                        });
             // добавляем компоненты
-            for (int i = 0; i < model.CommodityDetalis.Count; ++i)
+            foreach (var groupDetali in groupDetalis)
             {
                 source.CommodityDetalis.Add(new CommodityDetali
                 {
                     Id = ++maxPCId,
                     CommodityId = maxId + 1,
-                    DetaliId = model.CommodityDetalis[i].DetaliId,
-                    Count = model.CommodityDetalis[i].Count
+                    DetaliId = groupDetali.DetaliId,
+                    Count = groupDetali.Count
                 });
             }
         }
 
         public void UpdElement(CommodityBindingModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Commoditys.Count; ++i)
+            Commodity element = source.Commoditys.FirstOrDefault(rec =>
+                                        rec.CommodityName == model.CommodityName && rec.Id != model.Id);
+            if (element != null)
             {
-                if (source.Commoditys[i].Id == model.Id)
-                {
-                    index = i;
-                }
-                if (source.Commoditys[i].CommodityName == model.CommodityName &&
-                    source.Commoditys[i].Id != model.Id)
-                {
-                    throw new Exception("Уже есть изделие с таким названием");
-                }
+                throw new Exception("Уже есть самолет с таким названием");
             }
-            if (index == -1)
+            element = source.Commoditys.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Commoditys[index].CommodityName = model.CommodityName;
-            source.Commoditys[index].Price = model.Price;
-            int maxPCId = 0;
-            for (int i = 0; i < source.CommodityDetalis.Count; ++i)
-            {
-                if (source.CommodityDetalis[i].Id > maxPCId)
-                {
-                    maxPCId = source.CommodityDetalis[i].Id;
-                }
-            }
+            element.CommodityName = model.CommodityName;
+            element.Price = model.Price;
+
+            int maxPCId = source.CommodityDetalis.Count > 0 ? source.CommodityDetalis.Max(rec => rec.Id) : 0;
             // обновляем существуюущие компоненты
-            for (int i = 0; i < source.CommodityDetalis.Count; ++i)
+            var compIds = model.CommodityDetalis.Select(rec => rec.DetaliId).Distinct();
+            var updateDetalis = source.CommodityDetalis
+                                            .Where(rec => rec.CommodityId == model.Id &&
+                                           compIds.Contains(rec.DetaliId));
+            foreach (var updateDetali in updateDetalis)
             {
-                if (source.CommodityDetalis[i].CommodityId == model.Id)
-                {
-                    bool flag = true;
-                    for (int j = 0; j < model.CommodityDetalis.Count; ++j)
-                    {
-                        // если встретили, то изменяем количество
-                        if (source.CommodityDetalis[i].Id == model.CommodityDetalis[j].Id)
-                        {
-                            source.CommodityDetalis[i].Count = model.CommodityDetalis[j].Count;
-                            flag = false;
-                            break;
-                        }
-                    }
-                    // если не встретили, то удаляем
-                    if (flag)
-                    {
-                        source.CommodityDetalis.RemoveAt(i--);
-                    }
-                }
+                updateDetali.Count = model.CommodityDetalis
+                                                .FirstOrDefault(rec => rec.Id == updateDetali.Id).Count;
             }
+            source.CommodityDetalis.RemoveAll(rec => rec.CommodityId == model.Id &&
+                                       !compIds.Contains(rec.DetaliId));
             // новые записи
-            for (int i = 0; i < model.CommodityDetalis.Count; ++i)
+            var groupDetalis = model.CommodityDetalis
+                                        .Where(rec => rec.Id == 0)
+                                        .GroupBy(rec => rec.DetaliId)
+                                        .Select(rec => new
+                                        {
+                                            DetaliId = rec.Key,
+                                            Count = rec.Sum(r => r.Count)
+                                        });
+            foreach (var groupDetali in groupDetalis)
             {
-                if (model.CommodityDetalis[i].Id == 0)
+                CommodityDetali elementPC = source.CommodityDetalis
+                                        .FirstOrDefault(rec => rec.CommodityId == model.Id &&
+                                                        rec.DetaliId == groupDetali.DetaliId);
+                if (elementPC != null)
                 {
-                    // ищем дубли
-                    for (int j = 0; j < source.CommodityDetalis.Count; ++j)
+                    elementPC.Count += groupDetali.Count;
+                }
+                else
+                {
+                    source.CommodityDetalis.Add(new CommodityDetali
                     {
-                        if (source.CommodityDetalis[j].CommodityId == model.Id &&
-                            source.CommodityDetalis[j].DetaliId == model.CommodityDetalis[i].DetaliId)
-                        {
-                            source.CommodityDetalis[j].Count += model.CommodityDetalis[i].Count;
-                            model.CommodityDetalis[i].Id = source.CommodityDetalis[j].Id;
-                            break;
-                        }
-                    }
-                    // если не нашли дубли, то новая запись
-                    if (model.CommodityDetalis[i].Id == 0)
-                    {
-                        source.CommodityDetalis.Add(new CommodityDetali
-                        {
-                            Id = ++maxPCId,
-                            CommodityId = model.Id,
-                            DetaliId = model.CommodityDetalis[i].DetaliId,
-                            Count = model.CommodityDetalis[i].Count
-                        });
-                    }
+                        Id = ++maxPCId,
+                        CommodityId = model.Id,
+                        DetaliId = groupDetali.DetaliId,
+                        Count = groupDetali.Count
+                    });
                 }
             }
         }
 
         public void DelElement(int id)
         {
-            // удаяем записи по компонентам при удалении изделия
-            for (int i = 0; i < source.CommodityDetalis.Count; ++i)
+            Commodity element = source.Commoditys.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.CommodityDetalis[i].CommodityId == id)
-                {
-                    source.CommodityDetalis.RemoveAt(i--);
-                }
+                // удаяем записи по компонентам при удалении изделия
+                source.CommodityDetalis.RemoveAll(rec => rec.CommodityId == id);
+                source.Commoditys.Remove(element);
             }
-            for (int i = 0; i < source.Commoditys.Count; ++i)
+            else
             {
-                if (source.Commoditys[i].Id == id)
-                {
-                    source.Commoditys.RemoveAt(i);
-                    return;
-                }
+                throw new Exception("Элемент не найден");
             }
-            throw new Exception("Элемент не найден");
         }
     }
 }

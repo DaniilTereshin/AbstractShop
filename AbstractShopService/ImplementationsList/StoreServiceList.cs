@@ -4,6 +4,7 @@ using AbstractShopService.Interfaces;
 using AbstractShopService.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AbstractShopService.ImplementationsList
 {
@@ -18,100 +19,62 @@ namespace AbstractShopService.ImplementationsList
 
         public List<StoreViewModel> GetList()
         {
-            List<StoreViewModel> result = new List<StoreViewModel>();
-            for (int i = 0; i < source.Stores.Count; ++i)
-            {
-                // требуется дополнительно получить список компонентов на складе и их количество
-                List<StoreDetaliViewModel> StoreDetalis = new List<StoreDetaliViewModel>();
-                for (int j = 0; j < source.StoreDetalis.Count; ++j)
+            List<StoreViewModel> result = source.Stores
+                .Select(rec => new StoreViewModel
                 {
-                    if (source.StoreDetalis[j].StoreId == source.Stores[i].Id)
-                    {
-                        string detaliDlyaDvigatelya = string.Empty;
-                        for (int k = 0; k < source.Detalis.Count; ++k)
-                        {
-                            if (source.CommodityDetalis[j].DetaliId == source.Detalis[k].Id)
+                    Id = rec.Id,
+                    StoreName = rec.StoreName,
+                    StoreDetalis = source.StoreDetalis
+                            .Where(recPC => recPC.StoreId == rec.Id)
+                            .Select(recPC => new StoreDetaliViewModel
                             {
-                                detaliDlyaDvigatelya = source.Detalis[k].DetaliName;
-                                break;
-                            }
-                        }
-                        StoreDetalis.Add(new StoreDetaliViewModel
-                        {
-                            Id = source.StoreDetalis[j].Id,
-                            StoreId = source.StoreDetalis[j].StoreId,
-                            DetaliId = source.StoreDetalis[j].DetaliId,
-                            DetaliName = detaliDlyaDvigatelya,
-                            Count = source.StoreDetalis[j].Count
-                        });
-                    }
-                }
-                result.Add(new StoreViewModel
-                {
-                    Id = source.Stores[i].Id,
-                    StoreName = source.Stores[i].StoreName,
-                    StoreDetalis = StoreDetalis
-                });
-            }
+                                Id = recPC.Id,
+                                StoreId = recPC.StoreId,
+                                DetaliId = recPC.DetaliId,
+                                DetaliName = source.Detalis
+                                    .FirstOrDefault(recC => recC.Id == recPC.DetaliId)?.DetaliName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                })
+                .ToList();
             return result;
         }
 
         public StoreViewModel GetElement(int id)
         {
-            for (int i = 0; i < source.Stores.Count; ++i)
+            Store element = source.Stores.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                // требуется дополнительно получить список компонентов на складе и их количество
-                List<StoreDetaliViewModel> StoreDetalis = new List<StoreDetaliViewModel>();
-                for (int j = 0; j < source.StoreDetalis.Count; ++j)
+                return new StoreViewModel
                 {
-                    if (source.StoreDetalis[j].StoreId == source.Stores[i].Id)
-                    {
-                        string detaliDlyaDvigatelya = string.Empty;
-                        for (int k = 0; k < source.Detalis.Count; ++k)
-                        {
-                            if (source.CommodityDetalis[j].DetaliId == source.Detalis[k].Id)
+                    Id = element.Id,
+                    StoreName = element.StoreName,
+                    StoreDetalis = source.StoreDetalis
+                            .Where(recPC => recPC.StoreId == element.Id)
+                            .Select(recPC => new StoreDetaliViewModel
                             {
-                                detaliDlyaDvigatelya = source.Detalis[k].DetaliName;
-                                break;
-                            }
-                        }
-                        StoreDetalis.Add(new StoreDetaliViewModel
-                        {
-                            Id = source.StoreDetalis[j].Id,
-                            StoreId = source.StoreDetalis[j].StoreId,
-                            DetaliId = source.StoreDetalis[j].DetaliId,
-                            DetaliName = detaliDlyaDvigatelya,
-                            Count = source.StoreDetalis[j].Count
-                        });
-                    }
-                }
-                if (source.Stores[i].Id == id)
-                {
-                    return new StoreViewModel
-                    {
-                        Id = source.Stores[i].Id,
-                        StoreName = source.Stores[i].StoreName,
-                        StoreDetalis = StoreDetalis
-                    };
-                }
+                                Id = recPC.Id,
+                                StoreId = recPC.StoreId,
+                                DetaliId = recPC.DetaliId,
+                                DetaliName = source.Detalis
+                                    .FirstOrDefault(recC => recC.Id == recPC.DetaliId)?.DetaliName,
+                                Count = recPC.Count
+                            })
+                            .ToList()
+                };
             }
             throw new Exception("Элемент не найден");
         }
 
         public void AddElement(StoreBindingModel model)
         {
-            int maxId = 0;
-            for (int i = 0; i < source.Stores.Count; ++i)
+            Store element = source.Stores.FirstOrDefault(rec => rec.StoreName == model.StoreName);
+            if (element != null)
             {
-                if (source.Stores[i].Id > maxId)
-                {
-                    maxId = source.Stores[i].Id;
-                }
-                if (source.Stores[i].StoreName == model.StoreName)
-                {
-                    throw new Exception("Уже есть склад с таким названием");
-                }
+                throw new Exception("Уже есть склад с таким названием");
             }
+            int maxId = source.Stores.Count > 0 ? source.Stores.Max(rec => rec.Id) : 0;
             source.Stores.Add(new Store
             {
                 Id = maxId + 1,
@@ -121,45 +84,33 @@ namespace AbstractShopService.ImplementationsList
 
         public void UpdElement(StoreBindingModel model)
         {
-            int index = -1;
-            for (int i = 0; i < source.Stores.Count; ++i)
+            Store element = source.Stores.FirstOrDefault(rec =>
+                                        rec.StoreName == model.StoreName && rec.Id != model.Id);
+            if (element != null)
             {
-                if (source.Stores[i].Id == model.Id)
-                {
-                    index = i;
-                }
-                if (source.Stores[i].StoreName == model.StoreName &&
-                    source.Stores[i].Id != model.Id)
-                {
-                    throw new Exception("Уже есть склад с таким названием");
-                }
+                throw new Exception("Уже есть склад с таким названием");
             }
-            if (index == -1)
+            element = source.Stores.FirstOrDefault(rec => rec.Id == model.Id);
+            if (element == null)
             {
                 throw new Exception("Элемент не найден");
             }
-            source.Stores[index].StoreName = model.StoreName;
+            element.StoreName = model.StoreName;
         }
 
         public void DelElement(int id)
         {
-            // при удалении удаляем все записи о компонентах на удаляемом складе
-            for (int i = 0; i < source.StoreDetalis.Count; ++i)
+            Store element = source.Stores.FirstOrDefault(rec => rec.Id == id);
+            if (element != null)
             {
-                if (source.StoreDetalis[i].StoreId == id)
-                {
-                    source.StoreDetalis.RemoveAt(i--);
-                }
+                // при удалении удаляем все записи о компонентах на удаляемом складе
+                source.StoreDetalis.RemoveAll(rec => rec.StoreId == id);
+                source.Stores.Remove(element);
             }
-            for (int i = 0; i < source.Stores.Count; ++i)
+            else
             {
-                if (source.Stores[i].Id == id)
-                {
-                    source.Stores.RemoveAt(i);
-                    return;
-                }
+                throw new Exception("Элемент не найден");
             }
-            throw new Exception("Элемент не найден");
         }
     }
 }
