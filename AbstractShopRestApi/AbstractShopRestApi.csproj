@@ -132,6 +132,7 @@
     <Compile Include="Controllers\CommodityController.cs" />
     <Compile Include="Controllers\DetaliController.cs" />
     <Compile Include="Controllers\MainController.cs" />
+    <Compile Include="Controllers\MessageInfoController.cs" />
     <Compile Include="Controllers\RabochiController.cs" />
     <Compile Include="Controllers\ReportController.cs" />
     <Compile Include="Controllers\StoreController.cs" />
