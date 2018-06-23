@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace AbstractShopService
 {
-    //[Table("AbstractDatabase3")]
+    
     public class AbstractDbContext : DbContext
     {
         public AbstractDbContext(): base ("AbstractDatabase3777")
