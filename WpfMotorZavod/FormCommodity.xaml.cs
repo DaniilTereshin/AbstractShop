@@ -1,6 +1,9 @@
-﻿using System;
+﻿using AbstractShopService.BindingModels;
+using AbstractShopService.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -11,11 +14,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using AbstractShopService.BindingModels;
-using AbstractShopService.Interfaces;
-using AbstractShopService.ViewModels;
-using Unity;
-using Unity.Attributes;
 namespace WpfMotorZavod
 {
     /// <summary>
@@ -23,22 +21,16 @@ namespace WpfMotorZavod
     /// </summary>
     public partial class FormCommodity : Window
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
         public int Id { set { id = value; } }
-
-        private readonly ICommodityService service;
 
         private int? id;
 
-        private List<CommodityDetaliViewModel> CommodityDetalis;
+        private List<CommodityDetaliViewModel> DetaliCommoditys;
 
-        public FormCommodity(ICommodityService service)
+        public FormCommodity()
         {
             InitializeComponent();
             Loaded += FormCommodity_Load;
-            this.service = service;
         }
 
         private void FormCommodity_Load(object sender, EventArgs e)
@@ -47,32 +39,33 @@ namespace WpfMotorZavod
             {
                 try
                 {
-                    CommodityViewModel view = service.GetElement(id.Value);
-                    if (view != null)
-                    {
-                        textBoxName.Text = view.CommodityName;
-                        textBoxPrice.Text = view.Price.ToString();
-                        CommodityDetalis = view.CommodityDetalis;
-                        LoadData();
-                    }
+                    var Commodity = Task.Run(() => APIClient.GetRequestData<CommodityViewModel>("api/Commodity/Get/" + id.Value)).Result;
+                    textBoxName.Text = Commodity.CommodityName;
+                    textBoxPrice.Text = Commodity.Price.ToString();
+                    DetaliCommoditys = Commodity.CommodityDetalis;
+                    LoadData();
                 }
                 catch (Exception ex)
                 {
+                    while (ex.InnerException != null)
+                    {
+                        ex = ex.InnerException;
+                    }
                     MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             else
-                CommodityDetalis = new List<CommodityDetaliViewModel>();
+                DetaliCommoditys = new List<CommodityDetaliViewModel>();
         }
 
         private void LoadData()
         {
             try
             {
-                if (CommodityDetalis != null)
+                if (DetaliCommoditys != null)
                 {
                     dataGridViewCommodity.ItemsSource = null;
-                    dataGridViewCommodity.ItemsSource = CommodityDetalis;
+                    dataGridViewCommodity.ItemsSource = DetaliCommoditys;
                     dataGridViewCommodity.Columns[0].Visibility = Visibility.Hidden;
                     dataGridViewCommodity.Columns[1].Visibility = Visibility.Hidden;
                     dataGridViewCommodity.Columns[2].Visibility = Visibility.Hidden;
@@ -87,14 +80,14 @@ namespace WpfMotorZavod
 
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FormCommodityDetali>();
+            var form = new FormCommodityDetali();
             if (form.ShowDialog() == true)
             {
                 if (form.Model != null)
                 {
                     if (id.HasValue)
                         form.Model.CommodityId = id.Value;
-                    CommodityDetalis.Add(form.Model);
+                    DetaliCommoditys.Add(form.Model);
                 }
                 LoadData();
             }
@@ -104,11 +97,11 @@ namespace WpfMotorZavod
         {
             if (dataGridViewCommodity.SelectedItem != null)
             {
-                var form = Container.Resolve<FormCommodityDetali>();
-                form.Model = CommodityDetalis[dataGridViewCommodity.SelectedIndex];
+                var form = new FormCommodityDetali();
+                form.Model = DetaliCommoditys[dataGridViewCommodity.SelectedIndex];
                 if (form.ShowDialog() == true)
                 {
-                    CommodityDetalis[dataGridViewCommodity.SelectedIndex] = form.Model;
+                    DetaliCommoditys[dataGridViewCommodity.SelectedIndex] = form.Model;
                     LoadData();
                 }
             }
@@ -123,7 +116,7 @@ namespace WpfMotorZavod
                 {
                     try
                     {
-                        CommodityDetalis.RemoveAt(dataGridViewCommodity.SelectedIndex);
+                        DetaliCommoditys.RemoveAt(dataGridViewCommodity.SelectedIndex);
                     }
                     catch (Exception ex)
                     {
@@ -151,51 +144,59 @@ namespace WpfMotorZavod
                 MessageBox.Show("Заполните цену", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            if (CommodityDetalis == null || CommodityDetalis.Count == 0)
+            if (DetaliCommoditys == null || DetaliCommoditys.Count == 0)
             {
                 MessageBox.Show("Заполните заготовки", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            try
+
+            List<CommodityDetaliBindingModel> DetaliCommodityBM = new List<CommodityDetaliBindingModel>();
+            for (int i = 0; i < DetaliCommoditys.Count; ++i)
             {
-                List<CommodityDetaliBindingModel> productComponentBM = new List<CommodityDetaliBindingModel>();
-                for (int i = 0; i < CommodityDetalis.Count; ++i)
+                DetaliCommodityBM.Add(new CommodityDetaliBindingModel
                 {
-                    productComponentBM.Add(new CommodityDetaliBindingModel
-                    {
-                        Id = CommodityDetalis[i].Id,
-                        CommodityId = CommodityDetalis[i].CommodityId,
-                        DetaliId = CommodityDetalis[i].DetaliId,
-                        Count = CommodityDetalis[i].Count
-                    });
-                }
-                if (id.HasValue)
-                {
-                    service.UpdElement(new CommodityBindingModel
-                    {
-                        Id = id.Value,
-                        CommodityName = textBoxName.Text,
-                        Price = Convert.ToInt32(textBoxPrice.Text),
-                        CommodityDetalis = productComponentBM
-                    });
-                }
-                else
-                {
-                    service.AddElement(new CommodityBindingModel
-                    {
-                        CommodityName = textBoxName.Text,
-                        Price = Convert.ToInt32(textBoxPrice.Text),
-                        CommodityDetalis = productComponentBM
-                    });
-                }
-                MessageBox.Show("Сохранение прошло успешно", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
-                DialogResult = true;
-                Close();
+                    Id = DetaliCommoditys[i].Id,
+                    CommodityId = DetaliCommoditys[i].CommodityId,
+                    DetaliId = DetaliCommoditys[i].DetaliId,
+                    Count = DetaliCommoditys[i].Count
+                });
             }
-            catch (Exception ex)
+            string name = textBoxName.Text;
+            int price = Convert.ToInt32(textBoxPrice.Text);
+            Task task;
+            if (id.HasValue)
             {
+                task = Task.Run(() => APIClient.PostRequestData("api/Commodity/UpdElement", new CommodityBindingModel
+                {
+                    Id = id.Value,
+                    CommodityName = name,
+                    Price = price,
+                    CommodityDetalis = DetaliCommodityBM
+                }));
+            }
+            else
+            {
+                task = Task.Run(() => APIClient.PostRequestData("api/Commodity/AddElement", new CommodityBindingModel
+                {
+                    CommodityName = name,
+                    Price = price,
+                    CommodityDetalis = DetaliCommodityBM
+                }));
+            }
+
+            task.ContinueWith((prevTask) => MessageBox.Show("Сохранение прошло успешно. Обновите список", "Сообщение", MessageBoxButton.OK, MessageBoxImage.Information),
+                TaskContinuationOptions.OnlyOnRanToCompletion);
+            task.ContinueWith((prevTask) =>
+            {
+                var ex = (Exception)prevTask.Exception;
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            }, TaskContinuationOptions.OnlyOnFaulted);
+
+            Close();
         }
 
         private void buttonCancel_Click(object sender, EventArgs e)
