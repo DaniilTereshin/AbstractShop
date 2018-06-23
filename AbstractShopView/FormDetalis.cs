@@ -1,24 +1,17 @@
-﻿using AbstractShopService.Interfaces;
+﻿using AbstractShopService.BindingModels;
 using AbstractShopService.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using Unity;
-using Unity.Attributes;
 
 namespace AbstractShopView
 {
     public partial class FormDetalis : Form
     {
-        [Dependency]
-        public new IUnityContainer Container { get; set; }
-
-        private readonly IDetaliService service;
-
-        public FormDetalis(IDetaliService service)
+        public FormDetalis()
         {
             InitializeComponent();
-            this.service = service;
         }
 
         private void FormComponents_Load(object sender, EventArgs e)
@@ -30,7 +23,7 @@ namespace AbstractShopView
         {
             try
             {
-                List<DetaliViewModel> list = service.GetList();
+                List<DetaliViewModel> list = Task.Run(() => APIClient.GetRequestData<List<DetaliViewModel>>("api/Detali/GetList")).Result;
                 if (list != null)
                 {
                     dataGridView.DataSource = list;
@@ -40,29 +33,29 @@ namespace AbstractShopView
             }
             catch (Exception ex)
             {
+                while (ex.InnerException != null)
+                {
+                    ex = ex.InnerException;
+                }
                 MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void buttonAdd_Click(object sender, EventArgs e)
         {
-            var form = Container.Resolve<FormDetali>();
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-                LoadData();
-            }
+            var form = new FormDetali();
+            form.ShowDialog();
         }
 
         private void buttonUpd_Click(object sender, EventArgs e)
         {
             if (dataGridView.SelectedRows.Count == 1)
             {
-                var form = Container.Resolve<FormDetali>();
-                form.Id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
-                if (form.ShowDialog() == DialogResult.OK)
+                var form = new FormDetali
                 {
-                    LoadData();
-                }
+                    Id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value)
+                };
+                form.ShowDialog();
             }
         }
 
@@ -73,15 +66,21 @@ namespace AbstractShopView
                 if (MessageBox.Show("Удалить запись", "Вопрос", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                 {
                     int id = Convert.ToInt32(dataGridView.SelectedRows[0].Cells[0].Value);
-                    try
+
+                    Task task = Task.Run(() => APIClient.PostRequestData("api/Detali/DelElement", new ZakazchikBindingModel { Id = id }));
+
+                    task.ContinueWith((prevTask) => MessageBox.Show("Запись удалена. Обновите список", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information),
+                    TaskContinuationOptions.OnlyOnRanToCompletion);
+
+                    task.ContinueWith((prevTask) =>
                     {
-                        service.DelElement(id);
-                    }
-                    catch (Exception ex)
-                    {
+                        var ex = (Exception)prevTask.Exception;
+                        while (ex.InnerException != null)
+                        {
+                            ex = ex.InnerException;
+                        }
                         MessageBox.Show(ex.Message, "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                    LoadData();
+                    }, TaskContinuationOptions.OnlyOnFaulted);
                 }
             }
         }
